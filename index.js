@@ -79,12 +79,14 @@ function createBot() {
       }, interval);
     }
 
-    discordBot.on('messageCreate', async message => {
-      if (message.author.bot) return;
-  
-      bot.chat(message.content);
-      lastBotMessage = message.content;
-    });
+    if (process.env.DISCORD_BOT_TOKEN) {
+      discordBot.on('messageCreate', async message => {
+        if (message.author.bot) return;
+    
+        bot.chat(message.content);
+        lastBotMessage = message.content;
+      });
+    }
   });
 
   bot.on("windowOpen", (window) => {
@@ -234,7 +236,7 @@ function createBot() {
       plainTextMessage.includes(" » Mir: ") &&
       !plainTextMessage.startsWith(authString)
     ) {
-      if (process.env.MSG_CHANNEL_ID) {
+      if (process.env.MSG_CHANNEL_ID && process.env.DISCORD_BOT_TOKEN) {
         const username = plainTextMessage.substring(
           "MSG ►► ".length,
           plainTextMessage.indexOf(" » Mir: "),
@@ -276,6 +278,11 @@ function createBot() {
 }
 
 function createDiscordBot() {
+  if (!process.env.DISCORD_BOT_TOKEN) {
+      console.error('Discord bot token not provided.');
+      return null;
+  }
+
   let bot = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
   bot.once('ready', () => {
