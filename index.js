@@ -1,21 +1,24 @@
 const mineflayer = require("mineflayer");
-const { mineflayer: mineflayerViewer } = require("prismarine-viewer");
 const { mapDownloader } = require('mineflayer-item-map-downloader')
 const fetch = require("node-fetch");
 require("dotenv").config();
 const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const fs = require('fs');
-const AWS = require('aws-sdk');
+const { S3Client, CopyObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
 
 let reconnectAttempts = 0;
 const solvedMaps = new Set();
 let lastBotMessage = "";
 let lastUploadedMapKey = "";
 
-const s3 = new AWS.S3({
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
   endpoint: process.env.AWS_ENDPOINT,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
 function createBot() {
@@ -202,27 +205,7 @@ function createBot() {
 
       if (process.env.MAP_UPLOAD === "true") {
         const newKey = `maps/solved/${lastBotMessage}.png`;
-        s3.copyObject({
-          Bucket: process.env.AWS_BUCKET_NAME,
-          CopySource: `${process.env.AWS_BUCKET_NAME}/${lastUploadedMapKey}`,
-          Key: newKey,
-        }, (copyErr, copyData) => {
-          if (copyErr) {
-            console.log("Error copying object", copyErr);
-          } else {
-            console.log("Copy success", copyData);
-            s3.deleteObject({
-              Bucket: process.env.AWS_BUCKET_NAME,
-              Key: lastUploadedMapKey,
-            }, (deleteErr, deleteData) => {
-              if (deleteErr) {
-                console.log("Error deleting object", deleteErr);
-              } else {
-                console.log("Delete success", deleteData);
-              }
-            });
-          }
-        });
+        replaceObject(lastUploadedMapKey, newKey);
       }
     }    
 
@@ -356,24 +339,44 @@ function sendImageMessage(bot, channelId, imagePath) {
       });
 }
 
-function uploadToS3(localPath, s3Path) {
-  fs.readFile(localPath, (err, data) => {
-    if (err) throw err;
-    const uploadParams = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: s3Path,
-      Body: data,
-    };
-    s3.upload(uploadParams, function(err, data) {
-      if (err) {
-        console.log("Error", err);
-      }
-      if (data) {
-        console.log("Upload Success", data.Location);
-        lastUploadedMapKey = s3Path;
-      }
+async function uploadToS3(localPath, s3Path) {
+  try {
+    const fileStream = fs.createReadStream(localPath);
+
+    const upload = new Upload({
+      client: s3Client,
+      params: {
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: s3Path,
+        Body: fileStream,
+      },
     });
-  });
+
+    const result = await upload.done();
+    console.log("Upload Success", result.Location);
+    lastUploadedMapKey = s3Path;
+  } catch (err) {
+    console.log("Error", err);
+  }
+}
+
+async function replaceObject(sourceKey, newKey) {
+  try {
+    await s3Client.send(new CopyObjectCommand({
+      Bucket: process.env.AWS_BUCKET_NAME,
+      CopySource: `${process.env.AWS_BUCKET_NAME}/${sourceKey}`,
+      Key: newKey,
+    }));
+    console.log("Copy success");
+
+    await s3Client.send(new DeleteObjectCommand({
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: sourceKey,
+    }));
+    console.log("Delete success");
+  } catch (err) {
+    console.error("Error during copy/delete operation", err);
+  }
 }
 
 createBot();
