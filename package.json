@@ -9,8 +9,11 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-      "dotenv": "^16.4.5",
-      "mineflayer": "^4.19.0",
-      "prismarine-viewer": "^1.28.0"
-    }
+        "aws-sdk": "^2.1586.0",
+        "discord.js": "^14.14.1",
+        "dotenv": "^16.4.5",
+        "mineflayer": "^4.19.0",
+        "mineflayer-item-map-downloader": "^1.2.0",
+        "prismarine-viewer": "^1.28.0"
+      }
   }
