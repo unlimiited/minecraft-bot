@@ -1,19 +1,20 @@
 {
-    "name": "mcbot",
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "aws-sdk": "^2.1586.0",
-        "discord.js": "^14.14.1",
-        "dotenv": "^16.4.5",
-        "mineflayer": "^4.19.0",
-        "mineflayer-item-map-downloader": "^1.2.0",
-        "prismarine-viewer": "^1.28.0"
-      }
+  "name": "mcbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1586.0",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5",
+    "mineflayer": "^4.19.0",
+    "mineflayer-item-map-downloader": "^1.2.0",
+    "prismarine-viewer": "^1.28.0",
+    "sharp": "^0.33.3"
   }
+}
