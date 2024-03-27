@@ -1,5 +1,7 @@
 FROM node:20-alpine
 
+RUN apk add --no-cache libc6-compat g++ make python3 libvips-dev
+
 WORKDIR /usr/src/app
 
 COPY package*.json ./
