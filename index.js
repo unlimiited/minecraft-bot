@@ -83,8 +83,12 @@ function createBot() {
       discordBot.on('messageCreate', async message => {
         if (message.author.bot) return;
     
-        bot.chat(message.content);
-        lastBotMessage = message.content;
+        if (message.author.id === process.env.DISCORD_USER_ID) {
+          if (message.channel.id === process.env.AMS_CHANNEL_ID) {
+            bot.chat(message.content);
+            lastBotMessage = message.content;
+          }
+        }
       });
     }
   });
